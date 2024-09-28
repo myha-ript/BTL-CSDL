@@ -1,12 +1,11 @@
 package btl;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Scanner;
 import java.sql.Statement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MySQLConnection {
 
@@ -47,18 +46,18 @@ public class MySQLConnection {
         return rs;
     }
 
-    static ResultSet getValue2(Connection conn) {
+    static ResultSet getValue2(Connection conn, String ngaybatDau, String ngayKetThuc) {
         ResultSet rs = null;
-        String query = """
+        String query = String.format("""
                 select sv.maSInhVien, sv.hoTen , dv.maDichVu , dv.tenDichVu,  SUM(sddv.soLuong*dv.donGia) as tong
                 from SuDungDichVu sddv
                 left join  SinhVien sv
-                on sv.maSInhVien = sddv.SinhVienmaSInhVien and sddv.thoiGianSuDung >= '2024-09-01' and sddv.thoiGianSuDung < '2024-09-31'
+                on sv.maSInhVien = sddv.SinhVienmaSInhVien and sddv.thoiGianSuDung >= '%s' and sddv.thoiGianSuDung < '%s'
                 left join DichVu dv 
                 on sddv.DichVumaDichVu  = dv.maDichVu
                 group by sv.maSInhVien, dv.maDichVu
                 order by sv.maSInhVien
-                """;
+                """,ngaybatDau, ngayKetThuc);
         try {
             Statement stmt = (Statement) conn.createStatement();
             rs = (ResultSet) stmt.executeQuery(query);
@@ -140,7 +139,11 @@ public class MySQLConnection {
                             }
                             break;
                         case 2:
-                            datas = getValue2(conn);
+                            System.out.format("Nhập ngày bắt đầu (định dạng năm-tháng-ngày ví dụ 2024-09-01): ");
+                            String ngayBatDau = scanner.nextLine();
+                            System.out.format("Nhập ngày kết thúc (định dạng năm-tháng-ngày ví dụ 2024-09-01): ");
+                            String ngayKetThuc = scanner.nextLine();
+                            datas = getValue2(conn,ngayBatDau,ngayKetThuc);
                             System.out.format("Mã sinh viên, Tên sinh viên, Mã dịch vụ, Tên dịch vụ, Tổng thu\n");
                             while (datas.next()) {
                                 String maSInhVien = datas.getString("maSInhVien");
